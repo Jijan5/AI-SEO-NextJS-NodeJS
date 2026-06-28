@@ -1,0 +1,248 @@
+# Opticrew.io — AI-Powered Programmatic SEO & Autopilot Content Engine
+## Implementation Plan
+
+A full-stack multi-tenant SaaS platform where agencies and end-users generate, publish, and manage hundreds of SEO articles on autopilot using a crew of AI agents — all branded under their own domain.
+
+---
+
+## 🏗️ Tech Stack
+
+| Layer | Choice | Reason |
+|---|---|---|
+| **Framework** | Next.js 16 (App Router) | Server Components + Node.js API Routes for the Backend |
+| **Language** | TypeScript | Type safety across the whole stack |
+| **Styling** | Tailwind CSS v4 | Already installed in project |
+| **Database** | MySQL on AWS (RDS/EC2) | Highly scalable, reliable backend storage |
+| **ORM** | Prisma | Type-safe DB queries, easy migrations |
+| **Auth** | NextAuth.js v5 (Auth.js) | Multi-role: SUPER_ADMIN, AGENCY_OWNER, CLIENT |
+| **AI — Content** | OpenAI GPT-4o API & Gemini | Article generation with strict prompt engineering |
+| **AI — Filtering** | Anthropic Claude API | Keyword intent classification |
+| **Search Grounding** | Tavily AI Search API | Real-time web facts to prevent hallucination |
+| **Keyword Research** | DataForSEO API | Authentic search volumes, long-tail keywords |
+| **CMS Publisher** | WordPress REST API + Webflow CMS API | One-click publish (Shopify in Phase 2) |
+| **Images** | Unsplash API | Free featured images for articles |
+| **Background Jobs** | Vercel Cron Jobs | Async article generation queue |
+| **Payments** | PayPal API | Monthly plans + LTD package + credit top-ups in USD |
+| **Email** | Resend | Transactional emails |
+| **File Storage** | Cloudflare R2 / AWS S3 | Logo, favicon uploads for white-label tenants |
+
+---
+
+## 🗄️ Database Schema (Prisma / MySQL)
+
+### Core Tables
+
+```
+tenants          → Agency white-label configs (domain, branding, credits)
+users            → All roles (SUPER_ADMIN | AGENCY_OWNER | CLIENT)
+integrations     → WordPress/Webflow API keys per tenant
+seo_campaigns    → Bulk generation campaigns
+articles         → Individual generated articles
+keyword_clusters → Keywords grouped by intent per campaign
+subscriptions    → PayPal plan data per user/tenant
+credit_logs      → Audit trail of AI credit consumption
+```
+
+### Key Relationships
+- `tenants` ← `users` (tenant_id FK) — Data isolation per agency
+- `tenants` ← `integrations` — Each agency connects their own CMS
+- `seo_campaigns` ← `keyword_clusters` ← `articles` — Cascade flow
+- `tenants.ai_credit_balance` — Decremented on every article generation
+
+---
+
+## 🗂️ Next.js App Router File Structure (Node.js Backend)
+
+```
+app/
+├── (marketing)/               # Public landing pages (no auth)
+│   ├── page.tsx               # Homepage / Hero
+│   ├── pricing/page.tsx       # Pricing page (Monthly + LTD)
+│   └── layout.tsx
+│
+├── (auth)/                    # Auth pages
+│   ├── login/page.tsx
+│   ├── register/page.tsx
+│   └── layout.tsx
+│
+├── (dashboard)/               # Authenticated app shell
+│   ├── layout.tsx             # Sidebar + Topbar
+│   ├── overview/page.tsx      # Dashboard home
+│   ├── campaigns/
+│   │   ├── page.tsx           # Campaign list
+│   │   ├── new/page.tsx       # Create new campaign
+│   │   └── [id]/page.tsx      # Campaign detail + articles
+│   ├── articles/
+│   │   ├── page.tsx           # All articles across campaigns
+│   │   └── [id]/page.tsx      # Article editor + publish
+│   ├── integrations/page.tsx  # Connect WordPress/Webflow
+│   ├── settings/page.tsx      # Profile, billing, API usage
+│   └── credits/page.tsx       # Credit balance + top-up
+│
+├── (tenant-admin)/            # Agency owner tools
+│   ├── layout.tsx
+│   ├── branding/page.tsx      # Upload logo, set colors, domain
+│   ├── clients/page.tsx       # Manage client sub-accounts
+│   └── billing/page.tsx       # PayPal billing
+│
+├── (super-admin)/             # Platform owner ONLY
+│   ├── tenants/page.tsx       # Manage all agencies
+│   └── analytics/page.tsx     # Platform-wide usage stats
+│
+├── api/                       # NODE.JS BACKEND ROUTES
+│   ├── auth/[...nextauth]/    # NextAuth handler
+│   ├── keywords/route.ts      # DataForSEO keyword research
+│   ├── campaigns/route.ts     # CRUD campaigns
+│   ├── articles/
+│   │   ├── route.ts           # List / create
+│   │   └── generate/route.ts  # AI generation trigger
+│   ├── publish/route.ts       # CMS publisher
+│   ├── integrations/route.ts  # Connect/test CMS connections
+│   ├── credits/route.ts       # Credit top-up via PayPal
+│   └── webhooks/paypal/route.ts
+│
+└── middleware.ts              # Multi-tenant domain detection
+```
+
+---
+
+## ⚙️ Core Engines — Implementation Detail
+
+### Engine 1: AI Keyword Mapper
+**Route:** `POST /api/keywords` (Node.js)
+
+1. User submits seed keyword + target country
+2. Call **DataForSEO** Keyword Ideas API → returns 200–500 raw keywords with search volume
+3. Pass keyword list to **Claude API** — prompt asks to classify by intent (Informational / Commercial / Transactional) and group into clusters
+4. Store clusters in `keyword_clusters` table linked to campaign
+5. UI shows interactive table with search vol, intent badge, competitor difficulty score
+
+### Engine 2: AI Content Autopilot
+**Route:** `POST /api/articles/generate` (background job)
+
+1. Retrieve keyword cluster from DB
+2. For each keyword in batch:
+   a. Call **Tavily Search API** → get top 3 real-time search result snippets (facts, dates, sources)
+   b. Build prompt utilizing **GPT-4o / Gemini** with: keyword, intent type, Tavily context, strict instructions (Markdown format, H2/H3 structure, no fluff, natural keyword placement)
+   c. Stream response or store full completion
+3. Decrement `tenants.ai_credit_balance` after each successful generation
+4. If balance = 0 → mark campaign as QUOTA_EXHAUSTED, block further generation
+5. Article stored with status `DRAFT`
+
+### Engine 3: One-Click CMS Publisher
+**Route:** `POST /api/publish` (Node.js)
+
+1. User selects articles (or all DRAFT in campaign)
+2. Fetch integration credentials from `integrations` table (decrypted)
+3. Fetch featured image from **Unsplash API** based on article topic
+4. Branch on `cms_type`:
+   - **WordPress:** `POST /wp-json/wp/v2/posts` with title, content (convert MD→HTML), featured_media
+   - **Webflow:** Webflow CMS Items API with field mapping
+5. Mark article as `PUBLISHED`, store `published_url`
+6. Optional: schedule publish via date picker → cron job handles delayed publish
+
+---
+
+## 🌐 Multi-Tenant Middleware (White-Label Core)
+
+```typescript
+// middleware.ts
+// 1. Read request host header
+// 2. Query DB: SELECT * FROM tenants WHERE custom_domain = host
+// 3. If match → inject tenant context into request headers
+// 4. Next.js layout reads tenant data → renders custom logo, colors
+// 5. No tenant found → render default Opticrew.io branding
+```
+
+The white-label UI theming is driven by CSS custom properties injected per-tenant:
+```css
+--brand-primary: {tenant.brand_color_hex};
+--brand-logo: url({tenant.logo_url});
+```
+
+---
+
+## 💳 Pricing & Billing Tiers
+
+| Plan | Price | Articles/mo | White-Label |
+|---|---|---|---|
+| Starter | $199/mo | 50 articles | ❌ |
+| Pro | $299/mo | 150 articles | ❌ |
+| Founder LTD | $4,999 one-time | 500/mo (AI credits) | ✅ Full white-label |
+| Credit Top-Up | $49 / 100 articles | On-demand | — |
+
+*All transactions processed in USD via PayPal API.*
+
+---
+
+## 🎨 Design System (Brand-Aligned)
+
+Based on the logo: **Deep Navy + Teal/Mint** palette
+
+```
+--color-navy-950: #0A1628
+--color-navy-900: #0D1F3C
+--color-navy-800: #152B50
+--color-teal-500: #2DD4BF
+--color-teal-400: #4EEACC
+--color-mint-300: #6EF0D8
+```
+
+- Font: **Inter** (body) + **Outfit** (headings) from Google Fonts
+- Dark mode by default (agency-grade SaaS feel)
+- Glassmorphism cards for dashboard widgets
+- Animated counters for stats (articles generated, credits used)
+- Real-time progress bars for campaign generation
+
+---
+
+## 📋 Build Phases
+
+### Phase 1 — Marketing & Landing Page (Starting Now)
+- [ ] Landing page (Hero, Features, How It Works, Pricing, CTA)
+- [ ] Design system (globals.css with brand tokens)
+- [ ] Responsive mobile design
+- [ ] SEO meta tags, OpenGraph for landing pages
+
+### Phase 2 — Foundation & Auth
+- [ ] Setup Prisma + MySQL schema (targeting AWS)
+- [ ] Install & configure NextAuth.js v5
+- [ ] Shared layout: Sidebar, Topbar, Breadcrumbs
+- [ ] Register / Login / Forgot Password pages
+
+### Phase 3 — Core Engine 1: Keyword Mapper
+- [ ] DataForSEO API integration
+- [ ] Claude intent classification
+- [ ] Campaign creation flow
+- [ ] Keyword cluster UI table with filters
+
+### Phase 4 — Core Engine 2: Content Autopilot
+- [ ] Tavily API integration
+- [ ] GPT-4o / Gemini article generation Node.js API route
+- [ ] Vercel Cron Jobs queue for bulk generation
+- [ ] Article editor (rich text preview of Markdown)
+- [ ] Credit deduction system + quota gate
+
+### Phase 5 — Core Engine 3: CMS Publisher
+- [ ] WordPress + Webflow integration connection flow
+- [ ] One-click & bulk publish
+- [ ] Unsplash featured image injection
+- [ ] Scheduled publishing via cron
+
+### Phase 6 — Billing & White-Label System
+- [ ] PayPal API Integration (Monthly + LTD)
+- [ ] Multi-tenant middleware
+- [ ] Tenant branding dashboard (logo upload, color picker, domain)
+- [ ] Dynamic CSS theming via tenant data
+- [ ] Custom domain CNAME documentation for agencies
+
+### Phase 7+ (Future)
+- [ ] Shopify CMS integration
+- [ ] Super Admin panel
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Pending User Request**: The user mentioned they have a specific request before we start building the Landing Page. Waiting for this request before proceeding with Phase 1 execution.

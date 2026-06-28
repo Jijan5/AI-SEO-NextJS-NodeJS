@@ -1,0 +1,90 @@
+MANUAL & SYSTEM BLUEPRINT: APP-SEO.IO 
+1. DATABASE STRUCTURE (MySQL Schema Overview) 
+Because this platform is multi-tenant (white-label), 
+table relationships must lock data based on the agency owner (tenant).
+tenants: Stores data for agencies that purchase the $4,999 package. 
+id (INT, PK), company_name, custom_domain (Unique, for URL detection), brand_color_hex, 
+logo_url, favicon_url, ai_credit_balance (Remaining monthly AI tokens).
+
+users: Data for all users (agency owners, agency staff, and end clients).id (INT, PK), 
+tenant_id (FK to tenants), name, email, password_hash, role (‘SUPER_ADMIN’, ‘AGENCY_OWNER’, ‘CLIENT’).
+
+integrations: Stores CMS access tokens for automated article publishing.id, tenant_id, cms_type (‘WORDPRESS’, ‘WEBFLOW’, ‘SHOPIFY’), 
+api_key_encrypted, target_url.
+
+seo_campaigns: Bulk article generation campaigns.id, tenant_id, created_by (foreign key to users), seed_keyword, total_articles_generated, 
+status (‘PROCESSING’, ‘COMPLETED’).
+
+2. MAIN DATA STRUCTURE ARCHITECTURE & CORE ENGINE WORKFLOW (5W+1H)
+Core Engine 1: AI Keyword Mapper (Automated Research)What: 
+An engine that breaks down a single primary keyword into hundreds of 
+low-competition long-tail keywords based on a specific country’s location.
+*How (Workflow): 
+1. The user enters a target keyword (e.g., “Best coffee shop”). 
+2. The Node.js backend calls a third-party API, such as DataForSEO or the Keyword Tool API, to retrieve authentic global search volumes. 
+3. The AI (Claude/GPT API) filters and groups these keywords based on search intent.
+
+Core Engine 2: AI Content Autopilot (Mass Production & Real-Time)What: 
+A module that writes hundreds of publish-ready articles with a single click.
+How (Workflow): 
+1. The system retrieves a list of keywords from Core Engine 1. 
+2. To prevent the AI from hallucinating or generating outdated data, Node.js performs a direct web search using the Tavily AI Search API to retrieve the latest facts and news data from 2026. 
+3. The raw content is sent to the GPT-4o API with strict writing instructions (prompt engineering): use Markdown format, naturally incorporate keywords, and create a Google-friendly heading structure (H2, H3).
+
+Core Engine 3: One-Click CMS Publisher (Automatic Publishing)What: 
+A publishing module that directly publishes article drafts from the dashboard to the user's website.
+How (Workflow): 
+1. After an article is produced in the backend, the system checks the integrations table. 
+2. Node.js makes a direct REST API call to the WordPress API (/wp-json/wp/v2/posts) or the Webflow CMS API. 
+3. The article is published immediately or on a scheduled basis, complete with a featured image generated for free via the Unsplash API.
+
+3. USER FLOW (User Flow & System Logic)
+Path A: Regular User Flow (Monthly Plans $199–$299)
+1. Users sign up on the App-SEO.io main website. 
+2. They connect their WordPress website via an API key. 
+3. They conduct keyword research → The AI generates 50 articles → The articles are automatically published on their WordPress site. 
+4. Every month, their article quota is refreshed according to their subscription plan.
+
+Path B: White-Label Buyer Workflow (Founder LTD Package, $4,999)
+1. The agency purchases the package through a dedicated offer page. 
+2. The agency logs into the dedicated settings dashboard (Tenant Settings): 
+3. They enter the name of their new application: “Apex SEO Engine.” 
+4. They upload their company logo and select the red color theme. 
+5. They enter their domain: ://apexmarketing.com. 
+6. In the provider’s domain control panel (Cloudflare/GoDaddy), 
+the agency points their domain’s CNAME record to your Next.js platform’s IP server 
+(cname.app-seo.io). Next.js Router Mechanism: 
+When someone accesses ://apexmarketing.com, 
+the Next.js middleware reads the request’s host object. 
+The Node.js backend retrieves a row of data from MySQL: 
+SELECT * FROM tenants WHERE custom_domain = ‘://apexmarketing.com’. The login page loads with your custom layout, 
+but your original branding is completely replaced with the Apex SEO Engine logo and colors. 
+The owner of the Apex agency creates an account for their own client 
+(e.g., klien1@gmail.com) and manually bills that client $500/month 
+via their PayPal account. The client logs in to ://apexmarketing.com, 
+enjoys the advanced features you’ve built, without ever knowing that 
+the underlying platform belongs to you (App-SEO.io).
+
+4. COST PROTECTION SYSTEM (Token & Credit Gate) To ensure you don’t incur 
+losses due to skyrocketing OpenAI/Claude bills from mass usage by $4,999 buyers:
+Credit Deduction System: Every time an article is successfully generated 
+(whether by the agency or their clients’ sub-accounts), Node.js calculates 
+the number of words/tokens used. MySQL Logic: UPDATE tenants SET 
+ai_credit_balance = ai_credit_balance - 1 WHERE id = tenant_id. 
+If ai_credit_balance == 0, all “Generate Article” buttons on the Next.js 
+frontend for that agency and all its clients will be automatically disabled, 
+and the following notification will appear: “Monthly quota exhausted. 
+Please purchase an AI Credit Top-Up package."
+
+==================== BRAND PHILOSOPHY ====================
+Philosophy & Meaning Behind the Opticrew.io Logo Design: 
+This logo was specifically designed to reflect your platform’s key selling points—namely, 
+mass automation and the power of the AI (Multi-Agent) team working behind the scenes: 
+Geometric Icon Design (Gear + Nodes): The gear element symbolizes an SEO optimization 
+system that runs automatically (on autopilot). The interconnected node lines within it 
+represent the concept of the Crew (AI agents working together to produce content). Deep 
+Cyber Blue & Electric Indigo Colors: Deep blue conveys trustworthiness and data security—essential qualities 
+if you want agencies to be willing to pay $4,999. The touch of Electric Indigo conveys modernity, 
+artificial intelligence (AI), and future technology. Clean & Minimalist Typography: 
+The use of bold sans-serif fonts shows that your platform is a serious, stable work tool 
+designed for high efficiency without unnecessary embellishments.
