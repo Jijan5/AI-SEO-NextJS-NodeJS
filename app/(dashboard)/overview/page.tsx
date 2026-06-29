@@ -41,7 +41,7 @@ export default function OverviewPage() {
       </div>
 
       {/* ── METRICS GRID ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <MetricCard 
           title="Articles Generated" 
           value="1,284" 
@@ -66,6 +66,36 @@ export default function OverviewPage() {
           bgColor="bg-purple-100 dark:bg-purple-500/10"
           borderColor="border-purple-200 dark:border-purple-500/20"
         />
+        <MetricCard 
+          title="Total Organic Traffic" 
+          value="142.5K" 
+          change="+18.4%" 
+          icon={<Activity className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+          bgColor="bg-rose-100 dark:bg-rose-500/10"
+          borderColor="border-rose-200 dark:border-rose-500/20"
+        />
+      </div>
+
+      {/* ── AI SEO INSIGHTS (NEW HIGHLIGHTS) ── */}
+      <div className="bg-gradient-to-r from-teal-500/10 via-blue-500/10 to-purple-500/10 border border-teal-500/20 dark:border-teal-500/30 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-inner relative overflow-hidden">
+        <div className="absolute -left-20 -top-20 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl mix-blend-screen pointer-events-none"></div>
+        <div className="relative z-10 flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="w-5 h-5 text-teal-500 fill-teal-500" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">AI Optimization Opportunity Detected</h2>
+          </div>
+          <p className="text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
+            Our analysis found <span className="font-bold text-slate-900 dark:text-white">68 orphan pages</span> in your "Espresso Reviews" campaign that are leaking SEO value. We also detected 2 competitors outranking you for <span className="font-bold text-teal-600 dark:text-teal-400 cursor-pointer hover:underline">"best home barista setup"</span>.
+          </p>
+        </div>
+        <div className="relative z-10 flex shrink-0 gap-3 w-full md:w-auto">
+          <button className="flex-1 md:flex-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold px-6 py-3 rounded-xl hover:opacity-90 transition-opacity shadow-lg">
+            Fix Orphan Pages
+          </button>
+          <button className="flex-1 md:flex-none bg-teal-500 text-slate-900 font-bold px-6 py-3 rounded-xl hover:bg-teal-400 transition-colors shadow-[0_0_20px_rgba(45,212,191,0.3)]">
+            Spy Competitor
+          </button>
+        </div>
       </div>
 
       {/* ── CHARTS SECTION ── */}

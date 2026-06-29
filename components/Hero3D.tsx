@@ -316,22 +316,87 @@ function DualOrb({ viewState, scrollYProgress, onThemeSelect }: { viewState: Vie
   );
 }
 
-function WarpParticles({ viewState, scrollYProgress }: { viewState: ViewState, scrollYProgress?: any }) {
-  const groupRef1 = useRef<THREE.Group>(null);
-  const groupRef2 = useRef<THREE.Group>(null);
-  const s1a = useRef<THREE.Points>(null);
-  const s2a = useRef<THREE.Points>(null);
-  const s3a = useRef<THREE.Points>(null);
-  const s1b = useRef<THREE.Points>(null);
-  const s2b = useRef<THREE.Points>(null);
-  const s3b = useRef<THREE.Points>(null);
-  
-  // keep track of lerped sp, offset, and continuous warp position
-  const p = useRef({ sp: 0, offsetX: 0, warpZ: 0, warpSpeed: 0 });
+// --- HELPER TO CREATE GLOWING CIRCLE TEXTURE ---
+const getGlowTexture = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(0.3, 'rgba(255,255,255,0.8)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 64, 64);
+  }
+  return new THREE.CanvasTexture(canvas);
+};
+
+function WarpLayer({ count, size, color, viewState, pulseOffset }: { count: number, size: number, color: string, viewState: ViewState, pulseOffset: number }) {
+  const pointsRef = useRef<THREE.Points>(null);
+  const p = useRef({ warpSpeed: 0 });
+  const glowTexture = useMemo(() => getGlowTexture(), []);
+
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      // Much wider spread on X (400) to ensure wide monitors have particles on the edges
+      pos[i * 3]     = (Math.random() - 0.5) * 400; 
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 200; 
+      pos[i * 3 + 2] = (Math.random() * 400) - 300; // Z from -300 to 100
+    }
+    return pos;
+  }, [count]);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
+    // In onboarding, particles fly fast towards the camera. On landing page, they drift very slowly.
+    const targetSpeed = viewState === 'onboarding' ? 1.5 : 0.05;
+    p.current.warpSpeed = lerp(p.current.warpSpeed, targetSpeed, 0.02);
 
+    if (pointsRef.current) {
+      const pos = pointsRef.current.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < count; i++) {
+        pos[i * 3 + 2] += p.current.warpSpeed;
+        if (pos[i * 3 + 2] > 50) { 
+          // Reset particle far behind the camera with completely new random X/Y for infinite non-repeating randomness
+          pos[i * 3 + 2] = -350; 
+          pos[i * 3]     = (Math.random() - 0.5) * 400; 
+          pos[i * 3 + 1] = (Math.random() - 0.5) * 200; 
+        }
+      }
+      pointsRef.current.geometry.attributes.position.needsUpdate = true;
+
+      // Pulsing opacity effect
+      const mat = pointsRef.current.material as THREE.PointsMaterial;
+      mat.opacity = Math.sin(t * 1.5 + pulseOffset) * 0.3 + 0.5;
+    }
+  });
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial 
+        map={glowTexture}
+        color={color} 
+        size={size * 4} // Increased size to account for the faded edges of the gradient
+        sizeAttenuation 
+        transparent 
+        depthWrite={false} 
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  );
+}
+
+function WarpParticles({ viewState, scrollYProgress }: { viewState: ViewState, scrollYProgress?: any }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const p = useRef({ sp: 0, offsetX: 0 });
+
+  useFrame(() => {
     let targetSp = 0;
     if (viewState === 'scroll') {
       const scrollVal = scrollYProgress ? scrollYProgress.get() : 0;
@@ -352,51 +417,19 @@ function WarpParticles({ viewState, scrollYProgress }: { viewState: ViewState, s
 
     p.current.offsetX = lerp(p.current.offsetX, targetOffsetX, 0.05);
 
-    // ── Continuous warp speed for onboarding ──
-    const targetWarpSpeed = viewState === 'onboarding' ? 0.8 : 0;
-    p.current.warpSpeed = lerp(p.current.warpSpeed, targetWarpSpeed, 0.02);
-    p.current.warpZ += p.current.warpSpeed;
-    if (p.current.warpZ > 200) p.current.warpZ -= 200; // loop seamlessly
-
-    const baseZ = -50 + p.current.sp * 80;
-    const baseX = p.current.offsetX * 2;
-
-    if (groupRef1.current) {
-      groupRef1.current.position.z = baseZ + p.current.warpZ;
-      groupRef1.current.position.x = baseX;
+    if (groupRef.current) {
+      groupRef.current.position.z = -50 + p.current.sp * 80;
+      groupRef.current.position.x = p.current.offsetX * 2;
+      groupRef.current.rotation.z += 0.0005; // extremely subtle global rotation
     }
-    if (groupRef2.current) {
-      groupRef2.current.position.z = baseZ + p.current.warpZ - 200; // staggered behind
-      groupRef2.current.position.x = baseX;
-    }
-
-    // opacity pulse
-    const setOp = (ref: React.RefObject<THREE.Points | null>, v: number) => {
-      if (!ref.current) return;
-      const m = ref.current.material as THREE.ShaderMaterial;
-      if (m.uniforms?.opacity) m.uniforms.opacity.value = v;
-    };
-    const op1 = Math.sin(t * 1.5) * 0.4 + 0.4;
-    const op2 = Math.sin(t * 1.5 + 2) * 0.4 + 0.4;
-    const op3 = Math.sin(t * 1.5 + 4) * 0.4 + 0.4;
-    
-    setOp(s1a, op1); setOp(s2a, op2); setOp(s3a, op3);
-    setOp(s1b, op1); setOp(s2b, op2); setOp(s3b, op3);
   });
 
   return (
-    <>
-      <group ref={groupRef1}>
-        <Sparkles ref={s1a} count={350} scale={[80, 80, 200]} size={25} speed={0} noise={0} color="#2DD4BF" />
-        <Sparkles ref={s2a} count={350} scale={[90, 90, 200]} size={30} speed={0} noise={0} color="#6EF0D8" />
-        <Sparkles ref={s3a} count={350} scale={[100, 100, 200]} size={35} speed={0} noise={0} color="#4EEACC" />
-      </group>
-      <group ref={groupRef2}>
-        <Sparkles ref={s1b} count={350} scale={[80, 80, 200]} size={25} speed={0} noise={0} color="#2DD4BF" />
-        <Sparkles ref={s2b} count={350} scale={[90, 90, 200]} size={30} speed={0} noise={0} color="#6EF0D8" />
-        <Sparkles ref={s3b} count={350} scale={[100, 100, 200]} size={35} speed={0} noise={0} color="#4EEACC" />
-      </group>
-    </>
+    <group ref={groupRef}>
+      <WarpLayer count={1200} size={0.6} color="#2DD4BF" viewState={viewState} pulseOffset={0} />
+      <WarpLayer count={1200} size={0.9} color="#6EF0D8" viewState={viewState} pulseOffset={2} />
+      <WarpLayer count={1200} size={1.2} color="#4EEACC" viewState={viewState} pulseOffset={4} />
+    </group>
   );
 }
 

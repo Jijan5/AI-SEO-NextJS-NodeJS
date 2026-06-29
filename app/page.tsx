@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Hero3D, ViewState } from "@/components/Hero3D";
-import { ArrowRight, Bot, Zap, Globe, Layers, CheckCircle2, User, Building2, X, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Bot, Zap, Globe, Layers, CheckCircle2, User, Building2, X, Eye, EyeOff, Menu } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -24,6 +24,7 @@ export default function Home() {
   const [signupTab, setSignupTab] = useState<'individual' | 'team'>('individual');
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const { setTheme } = useTheme();
 
@@ -48,34 +49,75 @@ export default function Home() {
     <main className="flex min-h-screen flex-col relative">
       {/* Global Fixed 3D Background */}
       <Hero3D viewState={viewState} scrollYProgress={scrollYProgress} onThemeSelect={handleThemeSelect} />
+
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 py-4 px-6 flex justify-between items-center z-[100] bg-transparent">
+        <div className="flex items-center gap-2">
+          <Image 
+            src="/opticrew-io-bg-remove.png" 
+            alt="Opticrew.io" 
+            width={220} 
+            height={55} 
+            className="w-auto h-12 md:h-14" 
+          />
+        </div>
+        <div className="hidden md:flex items-center gap-4">
+          <a href="#features" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Features</a>
+          <a href="#pricing" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Pricing</a>
+          <button onClick={() => setAuthMode('login')} className="text-sm font-medium px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-md">
+            Login
+          </button>
+          <button onClick={() => setAuthMode('signup')} className="text-sm font-bold px-4 py-2 rounded-lg bg-teal-500 text-navy-950 hover:bg-teal-400 transition-colors shadow-[0_0_20px_rgba(45,212,191,0.3)]">
+            Start Free Trial
+          </button>
+        </div>
+        
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="md:hidden p-2 text-slate-300 hover:text-white transition-colors"
+        >
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </nav>
+
+      {/* Mobile Navigation Modal */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            key="mobile-menu-container"
+            className="fixed inset-0 z-50 md:hidden"
+          >
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setIsMobileMenuOpen(false)} 
+              className="absolute inset-0 bg-black/20 backdrop-blur-sm" 
+            />
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 50 }}
+              transition={{ type: "tween", ease: "easeOut", duration: 0.25 }}
+              className="absolute top-20 right-4 w-64 bg-transparent backdrop-blur-md rounded-2xl p-6 flex flex-col gap-4"
+            >
+              <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-bold text-white py-2 border-b border-white/5">Features</a>
+              <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-bold text-white py-2 border-b border-white/5">Pricing</a>
+              <div className="flex flex-col gap-3 mt-4">
+                <button onClick={() => { setIsMobileMenuOpen(false); setAuthMode('login'); }} className="text-base font-bold text-white py-3 rounded-xl bg-white/5 w-full text-center hover:bg-white/10 transition-colors">Login</button>
+                <button onClick={() => { setIsMobileMenuOpen(false); setAuthMode('signup'); }} className="text-base font-bold text-navy-950 py-3 rounded-xl bg-teal-500 w-full text-center shadow-[0_0_15px_rgba(45,212,191,0.2)] hover:bg-teal-400 transition-colors">Start Free Trial</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* LANDING PAGE CONTENT */}
       <div className={`transition-opacity duration-700 ${authMode !== 'none' ? 'opacity-0 pointer-events-none h-screen overflow-hidden' : 'opacity-100'}`}>
       {/* Hero Section */}
       <section className="relative h-screen flex flex-col items-center justify-center pt-20 px-4">
         
-        {/* Navigation */}
-        <nav className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-50">
-          <div className="flex items-center gap-2">
-            <Image 
-              src="/opticrew-io-bg-remove.png" 
-              alt="Opticrew.io" 
-              width={220} 
-              height={55} 
-              className="w-auto h-12 md:h-14" 
-            />
-          </div>
-          <div className="flex items-center gap-4">
-            <a href="#features" className="text-sm font-medium text-slate-300 hover:text-white transition-colors hidden md:block">Features</a>
-            <a href="#pricing" className="text-sm font-medium text-slate-300 hover:text-white transition-colors hidden md:block">Pricing</a>
-            <button onClick={() => setAuthMode('login')} className="text-sm font-medium px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-md">
-              Login
-            </button>
-            <button onClick={() => setAuthMode('signup')} className="text-sm font-bold px-4 py-2 rounded-lg bg-teal-500 text-navy-950 hover:bg-teal-400 transition-colors shadow-[0_0_20px_rgba(45,212,191,0.3)]">
-              Start Free Trial
-            </button>
-          </div>
-        </nav>
+
 
         {/* Hero Content */}
         <div className="z-10 flex flex-col items-center text-center max-w-4xl mx-auto space-y-6 md:space-y-8 mt-10">

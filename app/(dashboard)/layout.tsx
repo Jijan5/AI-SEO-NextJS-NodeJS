@@ -1,16 +1,47 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Megaphone, FileText, Puzzle, Settings, Coins, LogOut, Bell, Search, Sparkles, Menu, Sun, Moon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { LayoutDashboard, Megaphone, FileText, Puzzle, Settings, Coins, LogOut, Bell, Search, Sparkles, Menu, Sun, Moon, Map, Crosshair, Share2, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChatWidget } from "@/components/ChatWidget";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const pathname = usePathname();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  // Simulated logic: Is the user part of a team?
+  const isTeam = true; 
+
+  const handleNavClick = () => {
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    // Open sidebar by default only on desktop
+    if (window.innerWidth >= 768) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isNotificationsOpen || isChatOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isNotificationsOpen, isChatOpen]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0A1628] text-slate-700 dark:text-slate-300 flex">
@@ -33,16 +64,33 @@ export default function DashboardLayout({
           </Link>
         </div>
 
-        <nav className="flex-1 py-6 px-4 space-y-2 relative">
+        <nav className="flex-1 py-6 px-4 space-y-2 relative overflow-y-auto overscroll-contain scrollbar-none" data-lenis-prevent="true">
           {isSidebarOpen ? (
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-4 px-2 whitespace-nowrap">Main Menu</div>
           ) : (
             <div className="h-px bg-white/10 my-4 mx-2" />
           )}
           
-          <NavItem href="/overview" icon={<LayoutDashboard className="w-5 h-5 text-teal-400" />} label="Overview" isOpen={isSidebarOpen} active={true} />
-          <NavItem href="/campaigns" icon={<Megaphone className="w-5 h-5" />} label="Campaigns" isOpen={isSidebarOpen} />
-          <NavItem href="/articles" icon={<FileText className="w-5 h-5" />} label="Articles" isOpen={isSidebarOpen} />
+          <NavItem href="/overview" icon={<LayoutDashboard className={`w-5 h-5 ${pathname.startsWith('/overview') ? 'text-teal-400' : ''}`} />} label="Overview" isOpen={isSidebarOpen} active={pathname.startsWith('/overview')} onClick={handleNavClick} />
+          
+          {isSidebarOpen ? (
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-6 mb-3 px-2 whitespace-nowrap">Strategy & Tools</div>
+          ) : (
+            <div className="h-px bg-white/10 my-4 mx-2" />
+          )}
+          
+          <NavItem href="/research" icon={<Map className="w-5 h-5" />} label="Keyword Mapper" isOpen={isSidebarOpen} active={pathname.startsWith('/research')} onClick={handleNavClick} />
+          <NavItem href="/competitor-spy" icon={<Crosshair className="w-5 h-5" />} label="Competitor Spy" isOpen={isSidebarOpen} active={pathname.startsWith('/competitor-spy')} onClick={handleNavClick} />
+          <NavItem href="/link-graph" icon={<Share2 className="w-5 h-5" />} label="Internal Linker" isOpen={isSidebarOpen} active={pathname.startsWith('/link-graph')} onClick={handleNavClick} />
+          
+          {isSidebarOpen ? (
+            <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-6 mb-3 px-2 whitespace-nowrap">Content Generation</div>
+          ) : (
+            <div className="h-px bg-white/10 my-4 mx-2" />
+          )}
+
+          <NavItem href="/campaigns" icon={<Megaphone className="w-5 h-5" />} label="Campaigns" isOpen={isSidebarOpen} active={pathname.startsWith('/campaigns')} onClick={handleNavClick} />
+          <NavItem href="/articles" icon={<FileText className="w-5 h-5" />} label="Articles & Editor" isOpen={isSidebarOpen} active={pathname.startsWith('/articles')} onClick={handleNavClick} />
           
           {isSidebarOpen ? (
             <div className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-8 mb-4 px-2 whitespace-nowrap">Configuration</div>
@@ -50,8 +98,8 @@ export default function DashboardLayout({
             <div className="h-px bg-white/10 my-4 mx-2" />
           )}
           
-          <NavItem href="/integrations" icon={<Puzzle className="w-5 h-5" />} label="CMS Integrations" isOpen={isSidebarOpen} />
-          <NavItem href="/settings" icon={<Settings className="w-5 h-5" />} label="Tenant Settings" isOpen={isSidebarOpen} />
+          <NavItem href="/integrations" icon={<Puzzle className="w-5 h-5" />} label="CMS Integrations" isOpen={isSidebarOpen} active={pathname.startsWith('/integrations')} onClick={handleNavClick} />
+          <NavItem href="/settings" icon={<Settings className="w-5 h-5" />} label="Tenant Settings" isOpen={isSidebarOpen} active={pathname.startsWith('/settings')} onClick={handleNavClick} />
         </nav>
 
         <div className="p-4 border-t border-slate-200 dark:border-white/5">
@@ -76,7 +124,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* ── MAIN CONTENT ── */}
-      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+      <main className={`flex-1 min-w-0 flex flex-col min-h-screen transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
         {/* ── TOPBAR ── */}
         <header className="h-20 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#0A1628]/80 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-4 flex-1">
@@ -108,14 +156,28 @@ export default function DashboardLayout({
               </div>
             </Link>
             
-            <button className="relative text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+            {/* Chat Trigger (Only if Team) */}
+            {isTeam && (
+              <button 
+                onClick={() => setIsChatOpen(true)}
+                className="relative text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                <MessageSquare className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-[#0A1628]"></span>
+              </button>
+            )}
+
+            <button 
+              onClick={() => setIsNotificationsOpen(true)}
+              className="relative text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-teal-500 rounded-full border-2 border-white dark:border-[#0A1628]"></span>
             </button>
             
             <div className="w-px h-6 bg-slate-200 dark:bg-white/10 hidden md:block"></div>
             
-            <div className="flex items-center gap-3 cursor-pointer group">
+            <Link href="/profile" className="flex items-center gap-3 cursor-pointer group hover:bg-slate-100 dark:hover:bg-white/5 p-1.5 -m-1.5 rounded-xl transition-colors">
               <div className="text-right hidden md:block">
                 <div className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-teal-500 dark:group-hover:text-teal-400 transition-colors">John Doe</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">Apex Marketing</div>
@@ -125,7 +187,7 @@ export default function DashboardLayout({
                   <UserIcon className="w-4 h-4 md:w-5 md:h-5 text-slate-900 dark:text-white" />
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         </header>
 
@@ -134,16 +196,102 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+
+      {/* ── NOTIFICATION MODAL (SLIDE-OVER) ── */}
+      <AnimatePresence>
+        {isNotificationsOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsNotificationsOpen(false)}
+              className="fixed inset-0 bg-slate-900/20 dark:bg-black/40 backdrop-blur-sm z-50"
+            />
+            
+            {/* Slide Over Panel */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-white dark:bg-[#0A1628] border-l border-slate-200 dark:border-white/10 shadow-2xl z-50 flex flex-col"
+            >
+              <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Notifications</h2>
+                <button 
+                  onClick={() => setIsNotificationsOpen(false)}
+                  className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4" data-lenis-prevent="true">
+                <NotificationItem 
+                  icon={<Megaphone className="w-5 h-5 text-teal-500" />}
+                  title="Campaign Completed"
+                  desc="Q3 Coffee Reviews has finished generating 250 articles."
+                  time="2 mins ago"
+                  unread={true}
+                />
+                <NotificationItem 
+                  icon={<Coins className="w-5 h-5 text-amber-500" />}
+                  title="Low Credits Warning"
+                  desc="You have used 90% of your monthly AI credits."
+                  time="1 hour ago"
+                  unread={true}
+                />
+                <NotificationItem 
+                  icon={<FileText className="w-5 h-5 text-blue-500" />}
+                  title="New Feature Published"
+                  desc="We just added Shopify CMS support!"
+                  time="2 days ago"
+                />
+              </div>
+              
+              <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.02]">
+                <button className="w-full py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+                  Mark all as read
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── TEAM CHAT WIDGET ── */}
+      <ChatWidget isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+
     </div>
   );
 }
 
 // ── CUSTOM COMPONENTS ──
 
-function NavItem({ href, icon, label, isOpen, active = false }: any) {
+function NotificationItem({ icon, title, desc, time, unread = false }: any) {
+  return (
+    <div className={`p-4 rounded-xl border transition-colors flex gap-4 ${unread ? 'bg-slate-50 dark:bg-white/[0.02] border-teal-500/30' : 'bg-transparent border-transparent hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+      <div className="shrink-0 mt-1">{icon}</div>
+      <div>
+        <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          {title}
+          {unread && <span className="w-2 h-2 rounded-full bg-teal-500"></span>}
+        </h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{desc}</p>
+        <span className="text-[10px] text-slate-400 font-medium mt-2 block">{time}</span>
+      </div>
+    </div>
+  );
+}
+
+function NavItem({ href, icon, label, isOpen, active = false, onClick }: any) {
   return (
     <Link 
       href={href} 
+      onClick={onClick}
       className={`relative group flex items-center px-3 py-2.5 rounded-xl font-medium transition-colors ${active ? 'bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'}`}
     >
       <div className={`shrink-0 flex items-center justify-center transition-all duration-300 ${isOpen ? 'w-5' : 'w-full'}`}>

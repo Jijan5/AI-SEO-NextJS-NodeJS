@@ -1,12 +1,27 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 export function CustomCursor() {
+  const pathname = usePathname();
   const ringRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
 
+  const isPublicRoute = ['/', '/pricing', '/login', '/register'].includes(pathname || '/');
+
   useEffect(() => {
+    if (!isPublicRoute) {
+      document.documentElement.style.cursor = "";
+      return;
+    }
+    
+    // Disable on mobile/touch devices
+    if (typeof window !== 'undefined' && (window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches)) {
+      document.documentElement.style.cursor = "";
+      return;
+    }
+
     // Hide the native cursor globally
     document.documentElement.style.cursor = "none";
 
@@ -65,20 +80,22 @@ export function CustomCursor() {
         el.removeEventListener("mouseleave", onMouseLeave);
       });
     };
-  }, []);
+  }, [isPublicRoute]);
+
+  if (!isPublicRoute) return null;
 
   return (
     <>
       {/* Outer ring - lags behind */}
       <div
         ref={ringRef}
-        className="custom-cursor-ring fixed top-0 left-0 z-[9999] w-10 h-10 rounded-full border border-teal-400/70 pointer-events-none transition-all duration-150"
+        className="hidden md:block custom-cursor-ring fixed top-0 left-0 z-[9999] w-10 h-10 rounded-full border border-teal-400/70 pointer-events-none transition-all duration-150"
         style={{ willChange: "transform" }}
       />
       {/* Inner dot - snaps instantly */}
       <div
         ref={dotRef}
-        className="fixed top-0 left-0 z-[9999] w-2 h-2 rounded-full bg-teal-400 pointer-events-none shadow-[0_0_8px_2px_rgba(45,212,191,0.8)]"
+        className="hidden md:block fixed top-0 left-0 z-[9999] w-2 h-2 rounded-full bg-teal-400 pointer-events-none shadow-[0_0_8px_2px_rgba(45,212,191,0.8)]"
         style={{ willChange: "transform" }}
       />
     </>
