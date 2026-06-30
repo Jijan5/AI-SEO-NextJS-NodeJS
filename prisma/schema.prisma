@@ -28,16 +28,18 @@ model User {
 
 model Workspace {
   id            String   @id @default(cuid())
-  name          String   @default("Apex Marketing")
-  domain        String?  @default("app.apexmarketing.com")
-  logo          String?
+  name          String   @default("Opticrew Workspace")
   
-  // Theme Engine
-  primaryColor  String   @default("#14B8A6")
-  darkBg        String   @default("#0D1F3C")
-  darkPanel     String   @default("#1e293b")
-  lightBg       String   @default("#f8fafc")
-  lightPanel    String   @default("#ffffff")
+  // Autopilot Publishing & Indexing Engine
+  cmsType         String    @default("wordpress") // wordpress, webflow, shopify, webhook
+  cmsEndpoint     String?   
+  cmsApiKey       String?
+  publishSchedule String    @default("draft") // draft, immediate, drip_5, drip_10
+  autoIndex       Boolean   @default(false)
+
+  // Auto Internal Linking Engine
+  autoInternalLinking Boolean @default(true)
+  maxLinksPerArticle  Int     @default(3)
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

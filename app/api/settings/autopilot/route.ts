@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     let workspace = await prisma.workspace.findFirst();
     
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     
     return NextResponse.json(workspace);
   } catch (error) {
-    console.error("GET /api/settings/theme error:", error);
+    console.error("GET /api/settings/autopilot error:", error);
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
   }
 }
@@ -35,19 +35,20 @@ export async function POST(req: Request) {
         where: { id: workspace.id },
         data: {
           name: body.name,
-          domain: body.domain,
-          primaryColor: body.primaryColor,
-          darkBg: body.darkBg,
-          darkPanel: body.darkPanel,
-          lightBg: body.lightBg,
-          lightPanel: body.lightPanel,
+          cmsType: body.cmsType,
+          cmsEndpoint: body.cmsEndpoint,
+          cmsApiKey: body.cmsApiKey,
+          publishSchedule: body.publishSchedule,
+          autoIndex: body.autoIndex,
+          autoInternalLinking: body.autoInternalLinking,
+          maxLinksPerArticle: body.maxLinksPerArticle,
         }
       });
     }
     
     return NextResponse.json(workspace);
   } catch (error) {
-    console.error("POST /api/settings/theme error:", error);
+    console.error("POST /api/settings/autopilot error:", error);
     return NextResponse.json({ error: 'Failed to save settings' }, { status: 500 });
   }
 }

@@ -264,7 +264,6 @@ export default function DashboardLayout({
 
       {/* ── TEAM CHAT WIDGET ── */}
       <ChatWidget isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
-
     </div>
   );
 }
