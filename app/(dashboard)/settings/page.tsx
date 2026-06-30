@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings as SettingsIcon, Palette, Save, Monitor, Moon, Sun, Briefcase, Zap, Key, Lock, CreditCard, CheckCircle2, Image as ImageIcon, UploadCloud, ChevronDown, Eye, EyeOff, Loader2, XCircle } from "lucide-react";
+import { Settings as SettingsIcon, Palette, Save, Monitor, Moon, Sun, Briefcase, Zap, Key, Lock, CreditCard, CheckCircle2, Image as ImageIcon, UploadCloud, ChevronDown, Eye, EyeOff, Loader2, XCircle, LayoutTemplate, AppWindow, ShoppingCart, Webhook, Music, Camera, Users, PlayCircle } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -19,6 +19,7 @@ export default function SettingsPage() {
     cmsType: 'wordpress',
     cmsEndpoint: '',
     cmsApiKey: '',
+    publishingChannels: [] as {platform: string, endpointUrl: string, apiKey: string}[],
     publishSchedule: 'draft',
     autoIndex: false,
     autoInternalLinking: true,
@@ -44,6 +45,7 @@ export default function SettingsPage() {
             cmsType: data.cmsType || 'wordpress',
             cmsEndpoint: data.cmsEndpoint || '',
             cmsApiKey: data.cmsApiKey || '',
+            publishingChannels: data.publishingChannels ? (typeof data.publishingChannels === 'string' ? JSON.parse(data.publishingChannels) : data.publishingChannels) : [],
             publishSchedule: data.publishSchedule || 'draft',
             autoIndex: data.autoIndex || false,
             autoInternalLinking: data.autoInternalLinking !== undefined ? data.autoInternalLinking : true,
@@ -67,6 +69,7 @@ export default function SettingsPage() {
           cmsType: autopilotConfig.cmsType,
           cmsEndpoint: autopilotConfig.cmsEndpoint,
           cmsApiKey: autopilotConfig.cmsApiKey,
+          publishingChannels: autopilotConfig.publishingChannels,
           publishSchedule: autopilotConfig.publishSchedule,
           autoIndex: autopilotConfig.autoIndex,
           autoInternalLinking: autopilotConfig.autoInternalLinking,
@@ -85,7 +88,33 @@ export default function SettingsPage() {
     }
   };
 
+  const toggleChannel = (platform: string) => {
+    setAutopilotConfig(prev => {
+      const exists = prev.publishingChannels.some(c => c.platform === platform);
+      if (exists) {
+        return {
+          ...prev,
+          publishingChannels: prev.publishingChannels.filter(c => c.platform !== platform)
+        };
+      } else {
+        return {
+          ...prev,
+          publishingChannels: [...prev.publishingChannels, { platform, endpointUrl: '', apiKey: '' }]
+        };
+      }
+    });
+  };
 
+  const hasChannel = (platform: string) => autopilotConfig.publishingChannels.some(c => c.platform === platform);
+  
+  const updateChannel = (platform: string, field: 'endpointUrl' | 'apiKey', value: string) => {
+    setAutopilotConfig(prev => ({
+      ...prev,
+      publishingChannels: prev.publishingChannels.map(c => 
+        c.platform === platform ? { ...c, [field]: value } : c
+      )
+    }));
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
@@ -320,38 +349,74 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-900 dark:text-white">CMS Platform</label>
-              <p className="text-xs text-slate-500">The platform where your generated articles will be published.</p>
+              <label className="text-sm font-semibold text-slate-900 dark:text-white">Publishing Channels</label>
+              <p className="text-xs text-slate-500">Select all platforms where generated content should be distributed.</p>
             </div>
+            
+            {/* CMS Platforms */}
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">Web & CMS Platforms</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <button 
-                onClick={() => setAutopilotConfig({...autopilotConfig, cmsType: 'wordpress'})}
-                className={`p-4 rounded-xl border text-left transition-all ${autopilotConfig.cmsType === 'wordpress' ? 'bg-teal-500/10 border-teal-500 text-teal-700 dark:text-teal-400 shadow-sm' : 'bg-slate-50 dark:bg-navy-900/40 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-teal-500/50 hover:bg-white dark:hover:bg-navy-800'}`}
-              >
-                <div className="font-bold text-sm">WordPress</div>
-                <div className="text-[10px] uppercase tracking-wider font-semibold opacity-70 mt-1">REST API</div>
-              </button>
-              <button 
-                onClick={() => setAutopilotConfig({...autopilotConfig, cmsType: 'webflow'})}
-                className={`p-4 rounded-xl border text-left transition-all ${autopilotConfig.cmsType === 'webflow' ? 'bg-teal-500/10 border-teal-500 text-teal-700 dark:text-teal-400 shadow-sm' : 'bg-slate-50 dark:bg-navy-900/40 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-teal-500/50 hover:bg-white dark:hover:bg-navy-800'}`}
-              >
-                <div className="font-bold text-sm">Webflow</div>
-                <div className="text-[10px] uppercase tracking-wider font-semibold opacity-70 mt-1">CMS API</div>
-              </button>
-              <button 
-                onClick={() => setAutopilotConfig({...autopilotConfig, cmsType: 'shopify'})}
-                className={`p-4 rounded-xl border text-left transition-all ${autopilotConfig.cmsType === 'shopify' ? 'bg-teal-500/10 border-teal-500 text-teal-700 dark:text-teal-400 shadow-sm' : 'bg-slate-50 dark:bg-navy-900/40 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-teal-500/50 hover:bg-white dark:hover:bg-navy-800'}`}
-              >
-                <div className="font-bold text-sm">Shopify</div>
-                <div className="text-[10px] uppercase tracking-wider font-semibold opacity-70 mt-1">Blog API</div>
-              </button>
-              <button 
-                onClick={() => setAutopilotConfig({...autopilotConfig, cmsType: 'webhook'})}
-                className={`p-4 rounded-xl border text-left transition-all ${autopilotConfig.cmsType === 'webhook' ? 'bg-teal-500/10 border-teal-500 text-teal-700 dark:text-teal-400 shadow-sm' : 'bg-slate-50 dark:bg-navy-900/40 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-teal-500/50 hover:bg-white dark:hover:bg-navy-800'}`}
-              >
-                <div className="font-bold text-sm">Custom</div>
-                <div className="text-[10px] uppercase tracking-wider font-semibold opacity-70 mt-1">Webhook</div>
-              </button>
+              {[
+                { id: 'wordpress', name: 'WordPress', subtitle: 'REST API', icon: LayoutTemplate, hasImage: true },
+                { id: 'webflow', name: 'Webflow', subtitle: 'CMS API', icon: AppWindow, hasImage: true },
+                { id: 'shopify', name: 'Shopify', subtitle: 'Blog API', icon: ShoppingCart, hasImage: true },
+                { id: 'webhook', name: 'Custom', subtitle: 'Webhook', icon: Webhook, hasImage: false },
+              ].map(platform => {
+                const Icon = platform.icon;
+                return (
+                <button 
+                  key={platform.id}
+                  onClick={() => toggleChannel(platform.id)}
+                  className={`p-4 rounded-xl border text-left transition-all ${hasChannel(platform.id) ? 'bg-teal-500/10 border-teal-500 text-teal-700 dark:text-teal-400 shadow-sm ring-1 ring-teal-500/50' : 'bg-slate-50 dark:bg-navy-900/40 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-teal-500/50 hover:bg-white dark:hover:bg-navy-800'}`}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    {platform.hasImage ? (
+                      <div className="relative w-6 h-6 grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                        <img src={`/${platform.id}-light-mode.png`} alt={platform.name} className="absolute inset-0 w-full h-full object-contain dark:hidden" />
+                        <img src={`/${platform.id}-dark-mode.png`} alt={platform.name} className="absolute inset-0 w-full h-full object-contain hidden dark:block" />
+                      </div>
+                    ) : (
+                      <Icon className={`w-6 h-6 ${hasChannel(platform.id) ? 'text-teal-500' : 'text-slate-400 dark:text-slate-500'}`} />
+                    )}
+                    {hasChannel(platform.id) && <CheckCircle2 className="w-4 h-4 text-teal-500" />}
+                  </div>
+                  <div className="font-bold text-sm">{platform.name}</div>
+                  <div className="text-[10px] uppercase tracking-wider font-semibold opacity-70 mt-1">{platform.subtitle}</div>
+                </button>
+              )})}
+            </div>
+
+            {/* Social Media Platforms */}
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-6">Social Media Streams</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { id: 'tiktok', name: 'TikTok', subtitle: 'Video & Carousel', icon: Music, hasImage: true },
+                { id: 'instagram', name: 'Instagram', subtitle: 'Reels & Posts', icon: Camera, hasImage: true },
+                { id: 'facebook', name: 'Facebook', subtitle: 'Pages & Groups', icon: Users, hasImage: true },
+                { id: 'youtube', name: 'YouTube', subtitle: 'Shorts & Community', icon: PlayCircle, hasImage: true },
+              ].map(platform => {
+                const Icon = platform.icon;
+                return (
+                <button 
+                  key={platform.id}
+                  onClick={() => toggleChannel(platform.id)}
+                  className={`group p-4 rounded-xl border text-left transition-all ${hasChannel(platform.id) ? 'bg-teal-500/10 border-teal-500 text-teal-700 dark:text-teal-400 shadow-sm ring-1 ring-teal-500/50' : 'bg-slate-50 dark:bg-navy-900/40 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-teal-500/50 hover:bg-white dark:hover:bg-navy-800'}`}
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    {platform.hasImage ? (
+                      <div className="relative w-6 h-6 grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                        <img src={`/${platform.id}-light-mode.png`} alt={platform.name} className="absolute inset-0 w-full h-full object-contain dark:hidden" />
+                        <img src={`/${platform.id}-dark-mode.png`} alt={platform.name} className="absolute inset-0 w-full h-full object-contain hidden dark:block" />
+                      </div>
+                    ) : (
+                      <Icon className={`w-6 h-6 ${hasChannel(platform.id) ? 'text-teal-500' : 'text-slate-400 dark:text-slate-500'}`} />
+                    )}
+                    {hasChannel(platform.id) && <CheckCircle2 className="w-4 h-4 text-teal-500" />}
+                  </div>
+                  <div className="font-bold text-sm">{platform.name}</div>
+                  <div className="text-[10px] uppercase tracking-wider font-semibold opacity-70 mt-1">{platform.subtitle}</div>
+                </button>
+              )})}
             </div>
           </div>
 
@@ -392,39 +457,67 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-900 dark:text-white">Your CMS Details</label>
-              <p className="text-xs text-slate-500">Provide your website URL and API key so Autopilot can push articles automatically.</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <input 
-                  type="text" 
-                  value={autopilotConfig.cmsEndpoint}
-                  onChange={(e) => setAutopilotConfig({...autopilotConfig, cmsEndpoint: e.target.value})}
-                  placeholder="Website URL (e.g., https://my-seo-site.com)" 
-                  className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl py-2.5 px-4 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm" 
-                />
+          {autopilotConfig.publishingChannels.length > 0 && (
+            <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-white/10">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-slate-900 dark:text-white">Channel Configurations</label>
+                <p className="text-xs text-slate-500">Provide the specific credentials or profile URLs for each selected platform.</p>
               </div>
-            <div className="relative">
-              <input 
-                type={showKeys['cms'] ? "text" : "password"} 
-                value={autopilotConfig.cmsApiKey}
-                onChange={(e) => setAutopilotConfig({...autopilotConfig, cmsApiKey: e.target.value})}
-                placeholder="API Key / App Password" 
-                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl py-2.5 pl-4 pr-12 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 font-mono text-sm placeholder:font-sans" 
-              />
-              <button 
-                onClick={() => toggleKeyVisibility('cms')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              >
-                {showKeys['cms'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+              
+              <div className="space-y-4">
+                {autopilotConfig.publishingChannels.map((channel, index) => {
+                  const isSocial = ['tiktok', 'instagram', 'facebook', 'youtube'].includes(channel.platform);
+                  const nameMap: Record<string, string> = {
+                    wordpress: 'WordPress', webflow: 'Webflow', shopify: 'Shopify', webhook: 'Custom Webhook',
+                    tiktok: 'TikTok', instagram: 'Instagram', facebook: 'Facebook', youtube: 'YouTube'
+                  };
+                  const name = nameMap[channel.platform] || channel.platform;
+                  
+                  return (
+                    <div key={channel.platform} className="p-5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+                      <div className="font-bold text-sm text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded bg-teal-500/10 text-teal-500 flex items-center justify-center text-xs">{index + 1}</span>
+                        {name} Configuration
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                            {isSocial ? 'Profile / Page URL' : 'Endpoint URL'}
+                          </label>
+                          <input 
+                            type="text" 
+                            value={channel.endpointUrl}
+                            onChange={(e) => updateChannel(channel.platform, 'endpointUrl', e.target.value)}
+                            placeholder={isSocial ? `https://${channel.platform}.com/yourprofile` : "https://mywebsite.com/wp-json/wp/v2/posts"} 
+                            className="w-full bg-white dark:bg-[#0D1F3C] border border-slate-200 dark:border-white/10 rounded-xl py-2.5 px-4 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 text-sm" 
+                          />
+                        </div>
+                        <div className="relative">
+                          <label className="text-xs font-semibold text-slate-500 mb-1 block">
+                            {isSocial ? 'API Token (Optional for now)' : 'Application Password / API Key'}
+                          </label>
+                          <input 
+                            type={showKeys[channel.platform] ? "text" : "password"} 
+                            value={channel.apiKey}
+                            onChange={(e) => updateChannel(channel.platform, 'apiKey', e.target.value)}
+                            placeholder={isSocial ? "Link profile URL first..." : "xxxx-xxxx-xxxx-xxxx"} 
+                            className="w-full bg-white dark:bg-[#0D1F3C] border border-slate-200 dark:border-white/10 rounded-xl py-2.5 pl-4 pr-12 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 font-mono text-sm placeholder:font-sans" 
+                          />
+                          <button 
+                            onClick={() => toggleKeyVisibility(channel.platform)}
+                            className="absolute right-3 top-[28px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                          >
+                            {showKeys[channel.platform] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            </div>
-          </div>
+          )}
 
           {/* Auto Indexing Toggle */}
           <div className="pt-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between">

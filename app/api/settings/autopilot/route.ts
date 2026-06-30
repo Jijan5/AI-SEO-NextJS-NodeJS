@@ -38,6 +38,7 @@ export async function POST(req: Request) {
           cmsType: body.cmsType,
           cmsEndpoint: body.cmsEndpoint,
           cmsApiKey: body.cmsApiKey,
+          publishingChannels: body.publishingChannels,
           publishSchedule: body.publishSchedule,
           autoIndex: body.autoIndex,
           autoInternalLinking: body.autoInternalLinking,

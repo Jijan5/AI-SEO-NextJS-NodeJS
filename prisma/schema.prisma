@@ -31,9 +31,14 @@ model Workspace {
   name          String   @default("Opticrew Workspace")
   
   // Autopilot Publishing & Indexing Engine
+  // Deprecated Single-CMS Fields (kept for legacy support):
   cmsType         String    @default("wordpress") // wordpress, webflow, shopify, webhook
   cmsEndpoint     String?   
   cmsApiKey       String?
+  
+  // New Multi-Channel Configuration (JSON Array of channel objects)
+  publishingChannels Json?
+
   publishSchedule String    @default("draft") // draft, immediate, drip_5, drip_10
   autoIndex       Boolean   @default(false)
 

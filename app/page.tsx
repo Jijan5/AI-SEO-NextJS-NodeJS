@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { Hero3D, ViewState } from "@/components/Hero3D";
-import { ArrowRight, Bot, Zap, Globe, Layers, CheckCircle2, User, Building2, X, Eye, EyeOff, Menu } from "lucide-react";
+import { ArrowRight, Bot, Zap, Globe, Layers, CheckCircle2, User, Building2, X, Eye, EyeOff, Menu, FileText, Link as LinkIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -61,23 +61,28 @@ export default function Home() {
             className="w-auto h-12 md:h-14" 
           />
         </div>
-        <div className="hidden md:flex items-center gap-4">
-          <a href="#features" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Features</a>
-          <a href="#pricing" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Pricing</a>
-          <button onClick={() => setAuthMode('login')} className="text-sm font-medium px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-md">
-            Login
-          </button>
-          <button onClick={() => setAuthMode('signup')} className="text-sm font-bold px-4 py-2 rounded-lg bg-teal-500 text-navy-950 hover:bg-teal-400 transition-colors shadow-[0_0_20px_rgba(45,212,191,0.3)]">
-            Start Free Trial
-          </button>
-        </div>
         
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden p-2 text-slate-300 hover:text-white transition-colors"
-        >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {authMode === 'none' && (
+          <>
+            <div className="hidden md:flex items-center gap-4">
+              <a href="#features" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Features</a>
+              <a href="#pricing" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Pricing</a>
+              <button onClick={() => setAuthMode('login')} className="text-sm font-medium px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-md">
+                Login
+              </button>
+              <button onClick={() => setAuthMode('signup')} className="text-sm font-bold px-4 py-2 rounded-lg bg-teal-500 text-navy-950 hover:bg-teal-400 transition-colors shadow-[0_0_20px_rgba(45,212,191,0.3)]">
+                Start Free Trial
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 text-slate-300 hover:text-white transition-colors"
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </>
+        )}
       </nav>
 
       {/* Mobile Navigation Modal */}
@@ -276,12 +281,12 @@ export default function Home() {
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-teal-500/20 flex items-center justify-center text-teal-400">
                 <Zap className="w-5 h-5 md:w-6 md:h-6" />
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold">3. One-Click CMS Publisher</h3>
+              <h3 className="text-2xl md:text-3xl font-bold">3. Multi-Channel Distribution Hub</h3>
               <p className="text-slate-400 text-base md:text-lg leading-relaxed">
-                Connect your WordPress or Webflow site and publish hundreds of drafts immediately or schedule them over time. Featured images are automatically sourced.
+                Publish your generated content across the entire web simultaneously. Our engine hooks directly into your favorite CMS and social media platforms to blast content everywhere at once.
               </p>
               <ul className="space-y-2 md:space-y-3">
-                {["WordPress REST API & Webflow Integration", "Unsplash API for automatic images", "Cron job scheduling for drip publishing"].map((item, i) => (
+                {["WordPress, Webflow & Shopify Integration", "TikTok, Instagram, Facebook & YouTube", "Cron job scheduling for drip publishing"].map((item, i) => (
                   <li key={i} className="flex items-start md:items-center gap-3 text-slate-300 text-sm md:text-base">
                     <CheckCircle2 className="w-5 h-5 text-teal-500 shrink-0 mt-0.5 md:mt-0" />
                     <span>{item}</span>
@@ -331,6 +336,48 @@ export default function Home() {
                </div>
             </div>
           </div>
+          {/* Feature 4 */}
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mt-24">
+            <div className="h-[280px] sm:h-[350px] md:h-[400px] rounded-3xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 p-4 md:p-8 flex items-center justify-center relative overflow-hidden group">
+               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(234,179,8,0.1),transparent_50%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+               <div className="relative w-full max-w-sm flex items-center justify-center scale-90 md:scale-100">
+                 {/* Abstract network of nodes */}
+                 <div className="relative w-48 h-48">
+                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-teal-500/20 border border-teal-500/50 flex items-center justify-center text-teal-400 z-10"><Globe className="w-5 h-5" /></div>
+                   
+                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400"><FileText className="w-3 h-3" /></div>
+                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400"><FileText className="w-3 h-3" /></div>
+                   <div className="absolute top-1/2 left-0 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400"><FileText className="w-3 h-3" /></div>
+                   <div className="absolute top-1/2 right-0 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400"><FileText className="w-3 h-3" /></div>
+
+                   {/* Connecting lines */}
+                   <svg className="absolute inset-0 w-full h-full -z-10 opacity-30" viewBox="0 0 100 100">
+                     <line x1="50" y1="50" x2="50" y2="10" stroke="#2dd4bf" strokeWidth="1" strokeDasharray="2" />
+                     <line x1="50" y1="50" x2="50" y2="90" stroke="#2dd4bf" strokeWidth="1" strokeDasharray="2" />
+                     <line x1="50" y1="50" x2="10" y2="50" stroke="#2dd4bf" strokeWidth="1" strokeDasharray="2" />
+                     <line x1="50" y1="50" x2="90" y2="50" stroke="#2dd4bf" strokeWidth="1" strokeDasharray="2" />
+                   </svg>
+                 </div>
+               </div>
+            </div>
+            <div className="space-y-4 md:space-y-6">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-teal-500/20 flex items-center justify-center text-teal-400">
+                <LinkIcon className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+              <h3 className="text-2xl md:text-3xl font-bold">4. Auto-Semantic Linking</h3>
+              <p className="text-slate-400 text-base md:text-lg leading-relaxed">
+                Stop managing internal links manually. Our engine analyzes the semantic context of every generated article and automatically interlinks them together into a powerful topical cluster to dominate search rankings.
+              </p>
+              <ul className="space-y-2 md:space-y-3">
+                {["Automated Topical Authority Clustering", "Dynamic Anchor Text Optimization", "Reduces bounce rates naturally"].map((item, i) => (
+                  <li key={i} className="flex items-start md:items-center gap-3 text-slate-300 text-sm md:text-base">
+                    <CheckCircle2 className="w-5 h-5 text-teal-500 shrink-0 mt-0.5 md:mt-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
           
         </motion.div>
       </section>
@@ -360,14 +407,14 @@ export default function Home() {
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Starter Plan */}
           <div className="rounded-3xl bg-white/5 border border-white/10 p-8 flex flex-col hover:bg-white/[0.07] transition-colors">
-            <h3 className="text-xl font-medium text-slate-300">Starter</h3>
+            <h3 className="text-xl font-medium text-slate-300">Starter Plan</h3>
             <div className="mt-4 flex items-baseline text-5xl font-extrabold">
               $199
               <span className="ml-1 text-xl font-medium text-slate-500">/mo</span>
             </div>
-            <p className="mt-4 text-slate-400 text-sm">Perfect for single projects and small businesses.</p>
+            <p className="mt-4 text-slate-400 text-sm">Perfect for growing websites and solo marketers.</p>
             <ul className="mt-8 space-y-4 flex-1">
-              {["50 Articles per month", "All AI features included", "WordPress & Webflow Integration", "Standard Support"].map((item, i) => (
+              {["1,000 AI Credits per month", "Access to All Killer AI Features (No lockouts)", "Semantic Cluster & Internal Linking", "Dynamic Auto-Indexing Engine", "WordPress & Webflow Integration", "Team Chat & Workspace Collaboration"].map((item, i) => (
                 <li key={i} className="flex gap-3">
                   <CheckCircle2 className="w-5 h-5 text-teal-500 shrink-0" />
                   <span className="text-slate-300 text-sm">{item}</span>
@@ -377,36 +424,36 @@ export default function Home() {
             <button className="mt-8 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">Get Started</button>
           </div>
 
-          {/* Founder LTD (Highlighted) */}
+          {/* Pro Plan (Highlighted) */}
           <div className="rounded-3xl bg-gradient-to-b from-teal-500/20 to-navy-900/50 border border-teal-500/30 p-8 flex flex-col relative transform md:-translate-y-4 shadow-[0_0_40px_rgba(45,212,191,0.1)]">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-teal-500 text-navy-950 font-bold px-4 py-1 rounded-full text-xs tracking-wider uppercase">Most Popular</div>
-            <h3 className="text-xl font-medium text-teal-400">Founder LTD</h3>
-            <div className="mt-4 flex items-baseline text-5xl font-extrabold">
-              $4,999
-              <span className="ml-1 text-xl font-medium text-slate-500">/once</span>
-            </div>
-            <p className="mt-4 text-slate-400 text-sm">For agencies wanting a fully white-labeled software business.</p>
-            <ul className="mt-8 space-y-4 flex-1">
-              {["500 Articles per month (AI Credits)", "Full White-Label Customization", "Custom Domain (CNAME)", "Sub-account Management", "Priority Support & Setup"].map((item, i) => (
-                <li key={i} className="flex gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-teal-500 shrink-0" />
-                  <span className="text-slate-300 text-sm">{item}</span>
-                </li>
-              ))}
-            </ul>
-            <button className="mt-8 w-full py-3 rounded-xl bg-teal-500 text-navy-950 font-bold hover:bg-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all">Claim Lifetime Deal</button>
-          </div>
-
-          {/* Pro Plan */}
-          <div className="rounded-3xl bg-white/5 border border-white/10 p-8 flex flex-col hover:bg-white/[0.07] transition-colors">
-            <h3 className="text-xl font-medium text-slate-300">Pro</h3>
+            <h3 className="text-xl font-medium text-teal-400">Pro Plan</h3>
             <div className="mt-4 flex items-baseline text-5xl font-extrabold">
               $299
               <span className="ml-1 text-xl font-medium text-slate-500">/mo</span>
             </div>
-            <p className="mt-4 text-slate-400 text-sm">For growing brands and content teams.</p>
+            <p className="mt-4 text-slate-400 text-sm">Ideal for professional brands and content teams.</p>
             <ul className="mt-8 space-y-4 flex-1">
-              {["150 Articles per month", "All AI features included", "WordPress & Webflow Integration", "Advanced Scheduling"].map((item, i) => (
+              {["3,000 AI Credits per month", "Access to All Killer AI Features (No lockouts)", "Semantic Cluster & Internal Linking", "Dynamic Auto-Indexing Engine", "WordPress & Webflow Integration", "Team Chat & Workspace Collaboration"].map((item, i) => (
+                <li key={i} className="flex gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-teal-500 shrink-0" />
+                  <span className="text-slate-300 text-sm">{item}</span>
+                </li>
+              ))}
+            </ul>
+            <button className="mt-8 w-full py-3 rounded-xl bg-teal-500 text-navy-950 font-bold hover:bg-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all">Get Started</button>
+          </div>
+
+          {/* Scale Plan */}
+          <div className="rounded-3xl bg-white/5 border border-white/10 p-8 flex flex-col hover:bg-white/[0.07] transition-colors">
+            <h3 className="text-xl font-medium text-slate-300">Scale Plan</h3>
+            <div className="mt-4 flex items-baseline text-5xl font-extrabold">
+              $499
+              <span className="ml-1 text-xl font-medium text-slate-500">/mo</span>
+            </div>
+            <p className="mt-4 text-slate-400 text-sm">Built for agencies scaling content at maximum speed.</p>
+            <ul className="mt-8 space-y-4 flex-1">
+              {["5,000 AI Credits per month", "Access to All Killer AI Features (No lockouts)", "Semantic Cluster & Internal Linking", "Dynamic Auto-Indexing Engine", "WordPress & Webflow Integration", "Team Chat & Workspace Collaboration"].map((item, i) => (
                 <li key={i} className="flex gap-3">
                   <CheckCircle2 className="w-5 h-5 text-teal-500 shrink-0" />
                   <span className="text-slate-300 text-sm">{item}</span>
@@ -414,6 +461,31 @@ export default function Home() {
               ))}
             </ul>
             <button className="mt-8 w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors">Get Started</button>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto mt-16 p-8 rounded-3xl bg-navy-900/40 border border-white/10 text-left shadow-2xl">
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            <div className="md:w-1/3">
+              <h4 className="text-xl font-bold text-white mb-3">Transparent Credit Usage</h4>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                We believe in 100% transparency. Credits are consumed dynamically based on the exact complexity, length, and media types required for your generated content. Below are the <strong className="text-teal-400">estimated</strong> costs per generation:
+              </p>
+            </div>
+            <div className="md:w-2/3 w-full space-y-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-xl bg-white/5 border border-white/5 gap-3">
+                <span className="text-slate-300 font-medium text-sm">Text-Only Article (1,500+ words)</span>
+                <span className="font-mono text-xs px-3 py-1 bg-teal-500/10 rounded-full text-teal-400 font-semibold border border-teal-500/20 whitespace-nowrap">Estimate: 15 - 25 Credits</span>
+              </div>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-xl bg-white/5 border border-white/5 gap-3">
+                <span className="text-slate-300 font-medium text-sm">Article + AI Image Generation</span>
+                <span className="font-mono text-xs px-3 py-1 bg-teal-500/10 rounded-full text-teal-400 font-semibold border border-teal-500/20 whitespace-nowrap">Estimate: 35 - 50 Credits</span>
+              </div>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-xl bg-white/5 border border-white/5 gap-3">
+                <span className="text-slate-300 font-medium text-sm">Article + Image + Video Generation</span>
+                <span className="font-mono text-xs px-3 py-1 bg-teal-500/10 rounded-full text-teal-400 font-semibold border border-teal-500/20 whitespace-nowrap">Estimate: 80 - 120 Credits</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -441,25 +513,18 @@ export default function Home() {
           AUTH OVERLAYS
           ════════════════════════════════════════════════════════════ */}
       
-      {authMode !== 'none' && (
-        <div className="fixed top-0 left-0 p-6 z-[60]">
-          <button onClick={() => setAuthMode('none')} className="text-slate-400 hover:text-white transition-colors">
-            <Image src="/opticrew-io-bg-remove.png" alt="Opticrew.io" width={180} height={45} className="w-auto h-8 md:h-10" />
-          </button>
-        </div>
-      )}
-
       {/* LOGIN OVERLAY */}
       {authMode === 'login' && (
-        <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in zoom-in-95 duration-500" data-lenis-prevent="true">
-          <div className="min-h-full flex items-center justify-center p-4 py-24">
-            <div className="w-full max-w-md mx-auto relative">
-              <button onClick={() => setAuthMode('none')} className="absolute -top-12 right-0 text-slate-400 hover:text-white transition-colors flex items-center gap-2">
-                <X className="w-5 h-5" /> Close
+        <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in duration-300 pointer-events-none" data-lenis-prevent="true">
+          <div className="flex min-h-full items-center justify-center p-4 py-24">
+            <div className="w-full max-w-md mx-auto relative z-10 animate-in zoom-in-95 duration-300 pointer-events-auto">
+              <div className="bg-navy-950/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
+                <button type="button" onClick={() => setAuthMode('none')} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full w-8 h-8 z-50">
+                <X className="w-4 h-4" />
               </button>
-            <div className="bg-navy-950/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+              
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-500/50 to-transparent" />
-              <div className="text-center mb-8">
+              <div className="text-center mb-8 mt-2">
                 <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Welcome back</h1>
                 <p className="text-slate-400">Log in to manage your SEO campaigns</p>
               </div>
@@ -507,26 +572,27 @@ export default function Home() {
                 </svg>
                 Google
               </button>
+              </div>
+              <p className="text-center text-sm text-slate-400 mt-8 relative z-10">
+                Don't have an account? <button onClick={() => setAuthMode('signup')} className="text-teal-400 hover:text-teal-300 font-medium transition-colors">Sign up</button>
+              </p>
             </div>
-            <p className="text-center text-sm text-slate-400 mt-8">
-              Don't have an account? <button onClick={() => setAuthMode('signup')} className="text-teal-400 hover:text-teal-300 font-medium transition-colors">Sign up</button>
-            </p>
-          </div>
           </div>
         </div>
       )}
 
       {/* SIGNUP OVERLAY */}
       {authMode === 'signup' && (
-        <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in zoom-in-95 duration-500" data-lenis-prevent="true">
-          <div className="min-h-full flex items-center justify-center p-4 py-24">
-            <div className="w-full max-w-lg mx-auto relative">
-              <button onClick={() => setAuthMode('none')} className="absolute -top-12 right-0 text-slate-400 hover:text-white transition-colors flex items-center gap-2">
-                <X className="w-5 h-5" /> Close
+        <div className="fixed inset-0 z-50 overflow-y-auto animate-in fade-in duration-300 pointer-events-none" data-lenis-prevent="true">
+          <div className="flex min-h-full items-center justify-center p-4 py-24">
+            <div className="w-full max-w-lg mx-auto relative z-10 animate-in zoom-in-95 duration-300 pointer-events-auto">
+              <div className="bg-navy-950/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden relative">
+                <button type="button" onClick={() => setAuthMode('none')} className="absolute top-6 right-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-full w-8 h-8 z-50">
+                <X className="w-4 h-4" />
               </button>
-            <div className="bg-navy-950/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden transition-all duration-500">
+              
               <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-500/50 to-transparent" />
-              <div className="text-center mb-8">
+              <div className="text-center mb-8 mt-2">
                 <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Create an account</h1>
                 <p className="text-slate-400">Join the AI-powered SEO revolution.</p>
               </div>
@@ -625,10 +691,10 @@ export default function Home() {
                   Create Account
                 </button>
               </form>
-            </div>
-            <p className="text-center text-sm text-slate-400 mt-8 relative z-10">
-              Already have an account? <button onClick={() => setAuthMode('login')} className="text-teal-400 hover:text-teal-300 font-medium transition-colors">Log in</button>
-            </p>
+              </div>
+              <p className="text-center text-sm text-slate-400 mt-8 relative z-10">
+                Already have an account? <button onClick={() => setAuthMode('login')} className="text-teal-400 hover:text-teal-300 font-medium transition-colors">Log in</button>
+              </p>
             </div>
           </div>
         </div>
