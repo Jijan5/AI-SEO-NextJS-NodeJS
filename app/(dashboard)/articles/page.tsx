@@ -25,14 +25,14 @@ export default function ArticlesPage() {
         </div>
         <div className="flex items-center gap-3">
           <select className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 appearance-none">
-            <option value="all">All Campaigns</option>
-            <option value="1">Q3 Coffee Reviews</option>
-            <option value="2">B2B SaaS 2026</option>
+            <option value="all" className="bg-slate-50 dark:bg-[#0D1F3C]">All Campaigns</option>
+            <option value="1" className="bg-slate-50 dark:bg-[#0D1F3C]">Q3 Coffee Reviews</option>
+            <option value="2" className="bg-slate-50 dark:bg-[#0D1F3C]">B2B SaaS 2026</option>
           </select>
           <select className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 appearance-none">
-            <option value="all">All Statuses</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
+            <option value="all" className="bg-slate-50 dark:bg-[#0D1F3C]">All Statuses</option>
+            <option value="published" className="bg-slate-50 dark:bg-[#0D1F3C]">Published</option>
+            <option value="draft" className="bg-slate-50 dark:bg-[#0D1F3C]">Draft</option>
           </select>
         </div>
       </div>
@@ -133,7 +133,7 @@ function ArticleRow({ title, keyword, campaign, words, status }: any) {
         {getStatus()}
       </td>
       <td className="px-6 py-4 text-right">
-        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center justify-end gap-2 transition-opacity">
           {status === 'published' && (
             <button className="p-2 text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-lg transition-colors tooltip-trigger" title="View Live">
               <Globe className="w-4 h-4" />

@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  workspace     Workspace?
+}
+
+model Workspace {
+  id            String   @id @default(cuid())
+  name          String   @default("Apex Marketing")
+  domain        String?  @default("app.apexmarketing.com")
+  logo          String?
+  
+  // Theme Engine
+  primaryColor  String   @default("#14B8A6")
+  darkBg        String   @default("#0D1F3C")
+  darkPanel     String   @default("#1e293b")
+  lightBg       String   @default("#f8fafc")
+  lightPanel    String   @default("#ffffff")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  integrations  Integration[]
+}
+
+model Integration {
+  id            String   @id @default(cuid())
+  provider      String   // e.g. "anthropic", "openai", "gemini"
+  role          String   // e.g. "writer", "logic", "context", "research"
+  apiKey        String   @db.Text
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  workspaceId   String
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, role])
+}

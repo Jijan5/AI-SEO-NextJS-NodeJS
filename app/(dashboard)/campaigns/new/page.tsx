@@ -117,9 +117,9 @@ function StepOne() {
       <div className="space-y-1">
         <label className="text-sm font-semibold text-slate-900 dark:text-white">Target Website (CMS)</label>
         <select className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-all appearance-none">
-          <option>Select an integration...</option>
-          <option>caffeine.com (WordPress)</option>
-          <option>brewguides.io (Webflow)</option>
+          <option className="bg-slate-50 dark:bg-[#0D1F3C]">Select an integration...</option>
+          <option className="bg-slate-50 dark:bg-[#0D1F3C]">caffeine.com (WordPress)</option>
+          <option className="bg-slate-50 dark:bg-[#0D1F3C]">brewguides.io (Webflow)</option>
         </select>
       </div>
     </div>
