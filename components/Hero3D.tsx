@@ -5,13 +5,16 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 
-export type ViewState = 'scroll' | 'login' | 'signup-individual' | 'signup-team' | 'pricing' | 'onboarding';
+export type ViewState = 'scroll' | 'login' | 'signup-individual' | 'signup-team' | 'pricing' | 'onboarding' | 'transition-dark' | 'transition-light';
 
 function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 
 function DualOrb({ viewState, scrollYProgress, onThemeSelect }: { viewState: ViewState, scrollYProgress?: any, onThemeSelect?: (theme: 'dark' | 'light') => void }) {
   const [hoveredShell, setHoveredShell] = useState(false);
   const [hoveredCore, setHoveredCore] = useState(false);
+  
+  const transitionStart = useRef<number | null>(null);
+  const prevViewState = useRef<ViewState>(viewState);
   
   const hoverScaleShell = useRef(1);
   const hoverScaleCore = useRef(1);
@@ -58,7 +61,7 @@ function DualOrb({ viewState, scrollYProgress, onThemeSelect }: { viewState: Vie
   const cR1A = useRef(0); const cR2A = useRef(0); const cR3A = useRef(0);
 
   const v = useRef({
-    sp: 0, offsetX: 0,
+    sp: 0, offsetX: 0, offsetY: 0, offsetZ: 0,
     sGx: 0,  sScale: 1,
     cGx: 0,  cScale: 0.52,
     sROp: 1, cROp: 0, cWOp: 0,
@@ -72,12 +75,23 @@ function DualOrb({ viewState, scrollYProgress, onThemeSelect }: { viewState: Vie
     const a = 0.05;
     const c = v.current;
 
+    // ── Transition Time Tracking ────────────────────────────────────
+    if (viewState !== prevViewState.current) {
+      if (viewState.startsWith('transition-')) {
+        transitionStart.current = t;
+      } else {
+        transitionStart.current = null;
+      }
+      prevViewState.current = viewState;
+    }
+    const transTime = transitionStart.current ? t - transitionStart.current : 0;
+
     // ── Determine Target Scroll Percentage (SP) ───────────────────
     let targetSp = 0;
     if (viewState === 'scroll') {
       const scrollVal = scrollYProgress ? scrollYProgress.get() : 0;
       targetSp = lerp(0, 1, scrollVal);
-    } else if (viewState === 'pricing' || viewState === 'onboarding') {
+    } else if (viewState === 'pricing' || viewState === 'onboarding' || viewState.startsWith('transition-')) {
       targetSp = 1; // Split
     } else {
       targetSp = 0; // Login/Signup
@@ -106,11 +120,35 @@ function DualOrb({ viewState, scrollYProgress, onThemeSelect }: { viewState: Vie
       c.er = lerp(c.er, 0.05, a); c.eg = lerp(c.eg, 0.95, a);
       c.eb = lerp(c.eb, 0.6, a); c.ei = lerp(c.ei, 2.0, a);
 
-    // ── SECTION 3: Pricing — objects separate, each with 3 rings ──
+    // ── SECTION 3: Pricing / Onboarding / Transitions ─────────────
     } else {
       const off = mob ? 3.5 : 9;
-      c.sGx = lerp(c.sGx, -off, a); c.sScale = lerp(c.sScale, 0.75, a);
-      c.cGx = lerp(c.cGx, off, a);  c.cScale = lerp(c.cScale, 0.75, a);
+      
+      let targetSGx = -off, targetSScale = 0.75;
+      let targetCGx = off,  targetCScale = 0.75;
+      
+      // Handle cinematic transitions
+      if (viewState === 'transition-dark') {
+        targetCGx = 40; // Light sphere flies away right
+        targetSGx = 0;  // Dark sphere centers
+        if (transTime < 4.5) targetSScale = 0.4;
+        else targetSScale = 2.5; // Moderate scale while flying into camera
+      } else if (viewState === 'transition-light') {
+        targetSGx = -40; // Dark sphere flies away left
+        targetCGx = 0;   // Light sphere centers
+        if (transTime < 4.5) targetCScale = 0.4;
+        else targetCScale = 2.5;
+      }
+
+      const scaleLerpRate = transTime > 4.5 ? 0.05 : a;
+      const posLerpRate = viewState.startsWith('transition-') ? 0.05 : a;
+
+      c.sGx = lerp(c.sGx, targetSGx, posLerpRate); 
+      c.sScale = lerp(c.sScale, targetSScale, scaleLerpRate);
+      
+      c.cGx = lerp(c.cGx, targetCGx, posLerpRate);  
+      c.cScale = lerp(c.cScale, targetCScale, scaleLerpRate);
+      
       c.sROp = lerp(c.sROp, 1, a);
       c.cROp = lerp(c.cROp, 1, a);
       c.cWOp = lerp(c.cWOp, 0.4, a);
@@ -127,15 +165,53 @@ function DualOrb({ viewState, scrollYProgress, onThemeSelect }: { viewState: Vie
     c.offsetX = lerp(c.offsetX, targetOffsetX, a);
 
     // Custom Y offset for onboarding so it doesn't overlap top text
-    const targetY = viewState === 'onboarding' ? -1.5 : 0;
+    const targetYBase = viewState === 'onboarding' ? -1.5 : 0;
+    c.offsetY = lerp(c.offsetY, targetYBase, a);
+
+    let targetZ = 0;
+    if (viewState.startsWith('transition-') && transTime >= 4.5) {
+      targetZ = 28; // Fly straight into the camera (camera is at Z=30)
+    }
+    c.offsetZ = lerp(c.offsetZ, targetZ, 0.04); // Smooth acceleration towards camera
+
+    // Calculate full 360-degree spiral motion during transition phase 1
+    let spiralY = 0;
+    if (viewState.startsWith('transition-') && transTime < 1.5) {
+      const progress = transTime / 1.5; // 0 to 1
+      const mob = window.innerWidth < 768;
+      const startRadius = mob ? 3.5 : 9;
+      // Shrink radius with a slight easing
+      const radius = startRadius * (1 - Math.pow(progress, 1.2));
+      
+      if (viewState === 'transition-dark') {
+        // Starts left (Angle PI). Spirals up and over to the right.
+        const angle = Math.PI - (Math.PI * 2 * progress);
+        c.sGx = radius * Math.cos(angle);
+        spiralY = radius * Math.sin(angle);
+      } else if (viewState === 'transition-light') {
+        // Starts right (Angle 0). Spirals up and over to the left.
+        const angle = 0 + (Math.PI * 2 * progress);
+        c.cGx = radius * Math.cos(angle);
+        spiralY = radius * Math.sin(angle);
+      }
+    }
 
     // ── Apply shell group ─────────────────────────────────────────
     hoverScaleShell.current = lerp(hoverScaleShell.current, hoveredShell ? 1.05 : 1, 0.1);
     
     if (shellGroupRef.current) {
-      shellGroupRef.current.position.set(c.sGx + c.offsetX, targetY, 0);
+      const isChosen = viewState === 'transition-dark';
+      shellGroupRef.current.position.set(c.sGx + c.offsetX, c.offsetY + (isChosen ? spiralY : 0), (isChosen ? c.offsetZ : 0));
       shellGroupRef.current.scale.setScalar(c.sScale * base * hoverScaleShell.current);
-      shellRotY.current += 0.003;
+      
+      let rotSpeed = 0.003;
+      if (viewState === 'transition-dark') {
+         if (transTime < 1.5) rotSpeed = 0.03;
+         else if (transTime < 4.5) rotSpeed = 0.20; // Super fast spin in center
+         else rotSpeed = 0.08;
+      }
+      
+      shellRotY.current += rotSpeed;
       shellGroupRef.current.rotation.y = shellRotY.current;
     }
 
@@ -143,9 +219,18 @@ function DualOrb({ viewState, scrollYProgress, onThemeSelect }: { viewState: Vie
     hoverScaleCore.current = lerp(hoverScaleCore.current, hoveredCore ? 1.05 : 1, 0.1);
 
     if (coreGroupRef.current) {
-      coreGroupRef.current.position.set(c.cGx + c.offsetX, targetY, 0);
+      const isChosen = viewState === 'transition-light';
+      coreGroupRef.current.position.set(c.cGx + c.offsetX, c.offsetY + (isChosen ? spiralY : 0), (isChosen ? c.offsetZ : 0));
       coreGroupRef.current.scale.setScalar(c.cScale * base * hoverScaleCore.current);
-      coreRotY.current -= 0.005;
+      
+      let rotSpeed = 0.005;
+      if (viewState === 'transition-light') {
+         if (transTime < 1.5) rotSpeed = 0.03;
+         else if (transTime < 4.5) rotSpeed = 0.20;
+         else rotSpeed = 0.08;
+      }
+      
+      coreRotY.current -= rotSpeed;
       coreGroupRef.current.rotation.y = coreRotY.current;
     }
     if (coreMat.current) {
@@ -401,7 +486,7 @@ function WarpParticles({ viewState, scrollYProgress }: { viewState: ViewState, s
     if (viewState === 'scroll') {
       const scrollVal = scrollYProgress ? scrollYProgress.get() : 0;
       targetSp = scrollVal;
-    } else if (viewState === 'pricing' || viewState === 'onboarding') {
+    } else if (viewState === 'pricing' || viewState === 'onboarding' || viewState.startsWith('transition-')) {
       targetSp = 1;
     } else {
       targetSp = 0;

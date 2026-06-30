@@ -20,7 +20,7 @@ export default function Home() {
   const scale = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.8, 1, 1, 0.8]);
   const y = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [100, 0, 0, -100]);
 
-  const [authMode, setAuthMode] = useState<'none' | 'login' | 'signup' | 'onboarding'>('none');
+  const [authMode, setAuthMode] = useState<'none' | 'login' | 'signup' | 'onboarding' | 'transition-dark' | 'transition-light'>('none');
   const [signupTab, setSignupTab] = useState<'individual' | 'team'>('individual');
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
@@ -32,6 +32,8 @@ export default function Home() {
   if (authMode === 'login') viewState = 'login';
   else if (authMode === 'signup') viewState = signupTab === 'individual' ? 'signup-individual' : 'signup-team';
   else if (authMode === 'onboarding') viewState = 'onboarding';
+  else if (authMode === 'transition-dark') viewState = 'transition-dark';
+  else if (authMode === 'transition-light') viewState = 'transition-light';
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,9 +42,15 @@ export default function Home() {
   };
 
   const handleThemeSelect = (theme: 'dark' | 'light') => {
-    setTheme(theme);
-    // localStorage.setItem('opticrew_theme_selected', 'true'); // Disabled for testing
-    router.push('/overview');
+    // 1. Trigger the cinematic transition state
+    setAuthMode(theme === 'dark' ? 'transition-dark' : 'transition-light');
+    
+    // 2. Wait for the transition to finish (5.5s) before pushing to dashboard
+    setTimeout(() => {
+      setTheme(theme);
+      // localStorage.setItem('opticrew_theme_selected', 'true'); // Disabled for testing
+      router.push('/overview');
+    }, 5500);
   };
 
   return (
@@ -722,6 +730,19 @@ export default function Home() {
             </div>
           </div>
         </>
+      )}
+
+      {/* TRANSITION OVERLAY */}
+      {(authMode === 'transition-dark' || authMode === 'transition-light') && (
+        <div className="fixed inset-0 z-[110] flex flex-col items-center justify-start pt-20 pointer-events-none animate-in fade-in duration-1000">
+          <div className="flex flex-col items-center gap-4 text-center px-4">
+            <div className="w-10 h-10 rounded-full border-4 border-white/10 border-t-teal-500 animate-spin shadow-[0_0_15px_rgba(45,212,191,0.5)]" />
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-md">Initializing workspace</h2>
+              <p className="text-teal-400 font-medium tracking-wide drop-shadow-sm">Enjoy the ride. (This is a one-time setup)</p>
+            </div>
+          </div>
+        </div>
       )}
 
     </main>
